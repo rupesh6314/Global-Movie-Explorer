@@ -3,33 +3,33 @@ const API_BASE_URL = "/api/tmdb";
 async function fetchAPI(endpoint, options = {}) {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const url = `${API_BASE_URL}${cleanEndpoint}`;
-
+  
   try {
     console.log(`[API] Fetching: ${url}`);
-
+    
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
-
+    
     const response = await fetch(url, {
       signal: controller.signal,
       headers: { 'Accept': 'application/json' }
     });
-
+    
     clearTimeout(timeoutId);
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data.status_code && data.status_message) {
-        console.warn(`[API] TMDB error: ${data.status_message}`);
-        return { results: [] };
-      }
-      return data;
-    } else {
-      console.warn(`[API] HTTP ${response.status}`);
-      return { results: [] };
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
+    
+    const data = await response.json();
+    
+    if (data.status_code && data.status_message) {
+      throw new Error(`TMDB: ${data.status_message}`);
+    }
+    
+    return data;
   } catch (error) {
-    console.error(`[API] Error: ${error.message}`);
+    console.error(`[API Error] ${endpoint}:`, error.message);
     return { results: [] };
   }
 }
