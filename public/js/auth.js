@@ -150,11 +150,6 @@ class MovieAppUser {
 
         this.showNotification(`Welcome back, ${username}! 🎬`, 'success');
         this.updateUserUI();
-
-        setTimeout(() => {
-            window.location.reload();
-        }, 500);
-
         return { success: true };
     }
 
@@ -165,10 +160,7 @@ class MovieAppUser {
 
         this.showNotification(`Goodbye, ${username}! See you soon 👋`, 'info');
         this.updateUserUI();
-
-        setTimeout(() => {
-            window.location.reload();
-        }, 1500);
+        return { success: true };
     }
 
     isLoggedIn() {
@@ -291,15 +283,14 @@ class MovieAppUser {
                 e.stopPropagation();
                 this.showUserMenu();
             };
-            userBtn.style.cursor = 'pointer';
         } else {
             userBtn.innerHTML = `👤 Login`;
             userBtn.onclick = (e) => {
                 e.stopPropagation();
                 this.renderAuthModal();
             };
-            userBtn.style.cursor = 'pointer';
         }
+        userBtn.style.cursor = 'pointer';
     }
 
     showUserMenu() {
@@ -320,7 +311,7 @@ class MovieAppUser {
                 <button onclick="window.location.href='favorites.html'">❤️ My Favorites</button>
                 <button onclick="window.location.href='history.html'">🕐 Watch History</button>
                 <hr style="margin: 10px 0; border-color: rgba(255,255,255,0.1);">
-                <button id="logoutBtn" class="menu-logout">🚪 Logout</button>
+                <button id="logoutBtn">🚪 Logout</button>
             </div>
         `;
         
@@ -339,6 +330,7 @@ class MovieAppUser {
             logoutBtn.onclick = () => {
                 this.logout();
                 menu.remove();
+                this.updateUserUI();
             };
         }
         
@@ -377,7 +369,7 @@ class MovieAppUser {
                     <input type="password" id="loginPassword" placeholder="Password">
                     <label style="display: flex; align-items: center; gap: 8px; margin: 10px 0; cursor: pointer;">
                         <input type="checkbox" id="rememberMe"> 
-                        <span style="color: #aaa; font-size: 12px;">Remember me (stay logged in)</span>
+                        <span style="color: #aaa; font-size: 12px;">Remember me</span>
                     </label>
                     <button id="loginBtn">Login</button>
                 </div>
@@ -435,6 +427,7 @@ class MovieAppUser {
             if (result.success) {
                 modal.remove();
                 this.updateUserUI();
+                window.location.reload();
             }
         };
         
