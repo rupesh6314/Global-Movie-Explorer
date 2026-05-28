@@ -1,13 +1,19 @@
 {
   "version": 2,
+  "functions": {
+    "api/[...path].js": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/tmdb/(.*)",
-      "destination": "/api/tmdb.js"
+      "destination": "/api/[...path].js"
     },
     {
       "source": "/(.*)",
       "destination": "/public/index.html"
     }
-  ]
+  ],
+  "public": true
 }

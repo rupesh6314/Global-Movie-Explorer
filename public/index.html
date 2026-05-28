@@ -1,12 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Global Movie Explorer</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+  <script src="browser-config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/trending.js"></script>
+  <script src="js/analytics.js"></script>
+  <script defer src="js/movies.js"></script>
+  <script defer src="js/search.js"></script>
+  <script src="js/upcoming.js"></script>
+  <script src="js/cinebrain.js"></script>
 </head>
+
 <body>
 
   <button id="userBtn" class="user-btn">👤 Login</button>
@@ -75,17 +86,43 @@
     </div>
   </div>
 
-  <!-- Scripts - ORDER MATTERS -->
-  <script src="browser-config.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/trending.js"></script>
-  <script src="js/analytics.js"></script>
-  <script src="js/upcoming.js"></script>
-  <script src="js/movies.js"></script>
-  <script src="js/search.js"></script>
-
   <script>
+    (function() {
+      function checkNetworkAndGuide() {
+        if (localStorage.getItem('network_guide_shown')) return;
+        setTimeout(async () => {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const response = await fetch('/api/tmdb/trending/movie/week', { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (!response.ok) showNetworkGuide();
+          } catch (error) {
+            showNetworkGuide();
+          }
+        }, 3000);
+      }
+      
+      function showNetworkGuide() {
+        const guide = document.createElement('div');
+        guide.className = 'network-guide';
+        guide.innerHTML = `
+          <div class="network-guide-content">
+            <div class="guide-header"><span>📡</span><h4>Connection Tip</h4><button class="close-guide">&times;</button></div>
+            <p>Some mobile networks block movie APIs. Try these fixes:</p>
+            <ul><li>🔹 <strong>Switch to Wi-Fi</strong></li><li>🔹 <strong>Enable VPN</strong></li><li>🔹 <strong>Change DNS to 8.8.8.8</strong></li></ul>
+            <button class="dismiss-guide">Got it, don't show again</button>
+          </div>
+        `;
+        document.body.appendChild(guide);
+        guide.querySelector('.close-guide').onclick = () => guide.remove();
+        guide.querySelector('.dismiss-guide').onclick = () => { localStorage.setItem('network_guide_shown', 'true'); guide.remove(); };
+      }
+      
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', checkNetworkAndGuide);
+      else checkNetworkAndGuide();
+    })();
+
     document.addEventListener('DOMContentLoaded', () => {
       const trendingBtn = document.getElementById('trendingBtn');
       const modal = document.getElementById('trendingModal');
@@ -104,6 +141,7 @@
       });
 
       if (typeof movieUser !== 'undefined') movieUser.updateUserUI();
+      if (typeof analytics !== 'undefined') analytics.trackEvent('Page', 'view', 'Homepage');
     });
 
     async function loadTrendingByIndustry(industry) {
