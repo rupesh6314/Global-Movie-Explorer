@@ -9,6 +9,5 @@
       "source": "/(.*)",
       "destination": "/public/index.html"
     }
-  ],
-  "public": true
+  ]
 }
