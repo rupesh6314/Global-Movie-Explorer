@@ -1,7 +1,7 @@
 {
   "name": "global-movie-explorer",
   "version": "1.0.0",
-  "description": "Global Movie Explorer",
+  "description": "Global Movie Explorer - Discover movies from around the world",
   "scripts": {
     "vercel-build": "echo 'No build required'"
   },
@@ -11,6 +11,6 @@
     "express": "^5.2.1"
   },
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   }
 }
