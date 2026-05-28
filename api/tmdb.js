@@ -1,3 +1,4 @@
+// api/tmdb.js - Simple serverless function
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -10,14 +11,8 @@ app.use(express.json());
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_KEY = process.env.TMDB_KEY;
 
-if (!TMDB_KEY) {
-  console.error('❌ ERROR: TMDB_KEY is not set in environment variables');
-} else {
-  console.log('✅ TMDB API Key loaded');
-}
-
-// Proxy route for TMDB API
-app.use('/api/tmdb', async (req, res) => {
+// Handle all TMDB API requests
+app.use(async (req, res) => {
   try {
     const endpoint = req.path;
     const queryParams = new URLSearchParams(req.query).toString();
@@ -61,15 +56,6 @@ app.use('/api/tmdb', async (req, res) => {
       });
     }
   }
-});
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    apiKeyConfigured: !!TMDB_KEY,
-    timestamp: new Date().toISOString()
-  });
 });
 
 module.exports = app;
