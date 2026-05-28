@@ -671,15 +671,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     `;
     document.head.appendChild(styles);
   }
-
-  try {
-    const healthCheck = await fetch('/health');
-    const health = await healthCheck.json();
-    console.log("🏥 Health check:", health);
-  } catch (err) {
-    console.error("❌ Health check failed:", err);
-  }
-
   if (!personId) {
     setupFilters();
     setupIndustryFilter();
