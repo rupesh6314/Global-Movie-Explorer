@@ -3530,3 +3530,143 @@ h2::after {
   /* Fix overlapping floating buttons on tiny screens */
   .floating-trending-btn, .upcoming-floating-btn { bottom: 15px; min-width: 80px; padding: 8px 12px; font-size: 12px; }
 }
+/* ===============================
+   FIX 1 — DETAILS PAGE FULL WIDTH
+================================ */
+
+/* Ensure the whole page never clips */
+.details-container {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Hero must always be 100% width */
+.movie-hero {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Main content wrapper full width */
+.movie-content {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Two-column → single column EARLIER (768px, not 1000px) */
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 40px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .content-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .movie-hero {
+    padding: 30px 16px;
+  }
+
+  .movie-content {
+    padding: 0 16px 40px;
+  }
+
+  .hero-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+    max-width: 100%;
+  }
+
+  .movie-poster-large {
+    width: 180px;
+    margin: 0 auto;
+  }
+
+  .movie-title {
+    font-size: 1.8rem;
+  }
+
+  .movie-tagline {
+    font-size: 1rem;
+  }
+
+  .movie-stats {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .stat-divider {
+    display: none;
+  }
+
+  .movie-genres-list {
+    justify-content: center;
+  }
+
+  .action-buttons {
+    justify-content: center;
+  }
+
+  .trailer-btn {
+    display: block;
+    margin: 0 auto;
+  }
+}
+
+/* ===============================
+   FIX 2 — RECOMMENDATIONS SIDE BY SIDE
+================================ */
+
+/* Override everywhere — force a proper grid */
+.recommendations-section .recommendations-grid,
+.recommendations-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+  gap: 20px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Cards must never be block-level stacked */
+.rec-card {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+}
+
+/* Mobile — still show at least 2 columns */
+@media (max-width: 600px) {
+  .recommendations-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .rec-card img {
+    height: 200px;
+  }
+
+  .rec-info h4 {
+    font-size: 12px;
+  }
+
+  .recommendations-section {
+    padding: 0 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .recommendations-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .rec-card img {
+    height: 170px;
+  }
+}
