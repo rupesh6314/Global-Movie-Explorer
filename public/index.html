@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Movie Explorer</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+  <script src="browser-config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/trending.js"></script>
+  <script src="js/analytics.js"></script>
+  <script defer src="js/movies.js"></script>
+  <script defer src="js/search.js"></script>
+  <script src="js/upcoming.js"></script>
+  <script src="js/cinebrain.js"></script>
+</head>
+
+<body>
+
+  <button id="userBtn" class="user-btn">👤 Login</button>
+  <button id="trendingBtn" class="floating-trending-btn">🔥 Trending</button>
+
+  <header class="main-header">
+    <h1>🎬 Global Movie Explorer</h1>
+  </header>
+
+  <div class="search-container">
+    <input type="text" id="liveSearch" placeholder="Search movies or people... (Ctrl+K to focus)" autocomplete="off">
+    <div id="searchResults" class="search-results"></div>
+  </div>
+
+  <div class="top-bar">
+    <select id="industry">
+      <option value="">All Industries</option>
+      <option value="hollywood">Hollywood</option>
+      <option value="indian">Indian</option>
+    </select>
+    <select id="language">
+      <option value="">All Languages</option>
+      <option value="en">English</option>
+      <option value="hi">Hindi</option>
+      <option value="te">Telugu</option>
+      <option value="ta">Tamil</option>
+      <option value="ml">Malayalam</option>
+      <option value="kn">Kannada</option>
+    </select>
+    <select id="genre">
+      <option value="">Loading Genres...</option>
+    </select>
+    <select id="sort">
+      <option value="popularity.desc">Most Popular</option>
+      <option value="vote_average.desc">Top Rated</option>
+      <option value="release_date.desc">Newest</option>
+      <option value="release_date.asc">Oldest</option>
+    </select>
+  </div>
+
+  <div id="movies" class="movies-grid"></div>
+
+  <div class="pagination">
+    <button id="prevBtn" onclick="prevPage()">⬅ Prev</button>
+    <span>Page <span id="pageNumber">1</span></span>
+    <button id="nextBtn" onclick="nextPage()">Next ➡</button>
+  </div>
+
+  <div class="shortcuts-help">
+    <kbd>Ctrl+K</kbd> Search | <kbd>→</kbd> Next | <kbd>←</kbd> Prev | <kbd>Esc</kbd> Clear
+  </div>
+
+  <div id="trendingModal" class="trending-modal">
+    <div class="trending-modal-content">
+      <div class="trending-modal-header">
+        <h2>🔥 Trending Now</h2>
+        <button class="close-trending">&times;</button>
+      </div>
+      <div class="trending-industry-selector">
+        <button class="industry-trend-btn active" data-industry="all">🌍 All Industries</button>
+        <button class="industry-trend-btn" data-industry="hollywood">🎬 Hollywood</button>
+        <button class="industry-trend-btn" data-industry="indian">🇮🇳 Indian Cinema</button>
+      </div>
+      <div id="trendingLoading" class="trending-loading">Loading trending content...</div>
+      <div id="trendingModalContent" class="trending-modal-content-container"></div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      function checkNetworkAndGuide() {
+        if (localStorage.getItem('network_guide_shown')) return;
+        setTimeout(async () => {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const response = await fetch('/api/tmdb/trending/movie/week', { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (!response.ok) showNetworkGuide();
+          } catch (error) {
+            showNetworkGuide();
+          }
+        }, 3000);
+      }
+      
+      function showNetworkGuide() {
+        const guide = document.createElement('div');
+        guide.className = 'network-guide';
+        guide.innerHTML = `
+          <div class="network-guide-content">
+            <div class="guide-header"><span>📡</span><h4>Connection Tip</h4><button class="close-guide">&times;</button></div>
+            <p>Some mobile networks block movie APIs. Try these fixes:</p>
+            <ul><li>🔹 <strong>Switch to Wi-Fi</strong></li><li>🔹 <strong>Enable VPN</strong></li><li>🔹 <strong>Change DNS to 8.8.8.8</strong></li></ul>
+            <button class="dismiss-guide">Got it, don't show again</button>
+          </div>
+        `;
+        document.body.appendChild(guide);
+        guide.querySelector('.close-guide').onclick = () => guide.remove();
+        guide.querySelector('.dismiss-guide').onclick = () => { localStorage.setItem('network_guide_shown', 'true'); guide.remove(); };
+      }
+      
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', checkNetworkAndGuide);
+      else checkNetworkAndGuide();
+    })();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const trendingBtn = document.getElementById('trendingBtn');
+      const modal = document.getElementById('trendingModal');
+      const closeBtn = document.querySelector('.close-trending');
+
+      trendingBtn.onclick = () => { modal.classList.add('active'); loadTrendingByIndustry('all'); };
+      closeBtn.onclick = () => modal.classList.remove('active');
+      modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('active'); };
+
+      document.querySelectorAll('.industry-trend-btn').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('.industry-trend-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          loadTrendingByIndustry(btn.dataset.industry);
+        };
+      });
+
+      if (typeof movieUser !== 'undefined') movieUser.updateUserUI();
+      if (typeof analytics !== 'undefined') analytics.trackEvent('Page', 'view', 'Homepage');
+    });
+
+    async function loadTrendingByIndustry(industry) {
+      const loadingDiv = document.getElementById('trendingLoading');
+      const contentDiv = document.getElementById('trendingModalContent');
+      loadingDiv.style.display = 'block';
+      contentDiv.innerHTML = '';
+      try {
+        let endpoint = industry === 'hollywood' ? '/discover/movie?sort_by=popularity.desc&with_origin_country=US&page=1' : (industry === 'indian' ? '/discover/movie?sort_by=popularity.desc&with_origin_country=IN&page=1' : '/trending/movie/week?');
+        const data = await fetchAPI(endpoint);
+        const movies = data.results || [];
+        loadingDiv.style.display = 'none';
+        if (!movies.length) { contentDiv.innerHTML = '<p class="no-results">No trending movies found</p>'; return; }
+        contentDiv.innerHTML = `<div class="trending-movies-grid">${movies.slice(0, 20).map((movie, index) => `<div class="trending-movie-card" onclick="location.href='details.html?movieId=${movie.id}'"><div class="trending-rank">#${index + 1}</div>${movie.poster_path ? `<img src="https://image.tmdb.org/t/p/w200${movie.poster_path}" alt="${movie.title}">` : `<div class="no-image">🎬</div>`}<div class="trending-movie-info"><h4>${movie.title || movie.name}</h4><div class="trending-movie-rating">⭐ ${movie.vote_average?.toFixed(1) || 'N/A'}</div><div class="trending-movie-year">${movie.release_date?.slice(0, 4) || 'Upcoming'}</div></div></div>`).join('')}</div>`;
+      } catch (error) { loadingDiv.style.display = 'none'; contentDiv.innerHTML = '<p class="error-msg">Failed to load trending content.</p>'; }
+    }
+  </script>
+</body>
+</html>

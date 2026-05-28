@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch History - Movie Explorer</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕐</text></svg>">
+    <script src="browser-config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="details-nav">
+        <button class="nav-back" onclick="window.location.href='index.html'">← Back to Home</button>
+        <button id="userBtn" class="nav-user">👤 Login</button>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="library-container">
+        <div class="library-header">
+            <h1>🕐 Watch History</h1>
+            <p class="library-subtitle">Movies you've watched recently</p>
+        </div>
+
+        <div id="historyContainer" class="history-list">
+            <div class="loading-screen">
+                <div class="loading-spinner-large"></div>
+                <p>Loading your watch history...</p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .library-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            min-height: 70vh;
+        }
+
+        .library-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .library-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .library-subtitle {
+            color: #aaa;
+            font-size: 1rem;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .history-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .history-item:hover {
+            background: rgba(255, 215, 0, 0.1);
+            transform: translateX(5px);
+        }
+
+        .history-item img {
+            width: 60px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .history-info {
+            flex: 1;
+        }
+
+        .history-info h3 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            color: white;
+        }
+
+        .history-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        .watch-count {
+            color: #ffd700;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+        }
+
+        .empty-state h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #4a90e2;
+        }
+
+        .empty-state p {
+            color: #aaa;
+            margin-bottom: 25px;
+        }
+
+        .empty-state button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+
+        .empty-state button:hover {
+            transform: scale(1.05);
+        }
+
+        .clear-history {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 12px 20px;
+            background: #ff4444;
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .clear-history:hover {
+            background: #cc0000;
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .history-item {
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .history-item img {
+                width: 50px;
+                height: 75px;
+            }
+
+            .history-info h3 {
+                font-size: 0.9rem;
+            }
+
+            .history-meta {
+                font-size: 10px;
+                gap: 10px;
+            }
+
+            .clear-history {
+                bottom: 20px;
+                right: 20px;
+                padding: 8px 15px;
+                font-size: 12px;
+            }
+        }
+    </style>
+
+    <script>
+        function loadHistory() {
+            const container = document.getElementById('historyContainer');
+
+            // Check if user is logged in
+            if (!movieUser.isLoggedIn()) {
+                container.innerHTML = `
+                <div class="empty-state">
+                    <h2>🔒 Please Login</h2>
+                    <p>You need to be logged in to view your watch history</p>
+                    <button onclick="movieUser.renderAuthModal()">Login Now</button>
+                </div>
+            `;
+                return;
+            }
+
+            const history = movieUser.getWatchHistory();
+
+            if (history.length === 0) {
+                container.innerHTML = `
+                <div class="empty-state">
+                    <h2>🕐 No Watch History</h2>
+                    <p>Movies you watch will appear here!</p>
+                    <button onclick="window.location.href='index.html'">Start Watching</button>
+                </div>
+            `;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            history.forEach(movie => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                <img src="https://image.tmdb.org/t/p/w200${movie.poster}" alt="${movie.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'300\' viewBox=\'0 0 200 300\'%3E%3Crect width=\'200\' height=\'300\' fill=\'%23333\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' fill=\'%23666\' font-size=\'16\' dy=\'.3em\'%3E🎬%3C/text%3E%3C/svg%3E'">
+                <div class="history-info">
+                    <h3>${movie.title}</h3>
+                    <div class="history-meta">
+                        <span>📅 ${new Date(movie.watchedAt).toLocaleDateString()}</span>
+                        <span>⏰ ${new Date(movie.watchedAt).toLocaleTimeString()}</span>
+                        <span class="watch-count">👁️ Watched ${movie.watchCount} time${movie.watchCount > 1 ? 's' : ''}</span>
+                    </div>
+                </div>
+            `;
+                item.onclick = () => {
+                    window.location.href = `details.html?movieId=${movie.id}`;
+                };
+                container.appendChild(item);
+            });
+        }
+
+        function clearAllHistory() {
+            if (confirm('Are you sure you want to clear your entire watch history? This cannot be undone.')) {
+                // Clear history from localStorage
+                const user = movieUser.getCurrentUser();
+                if (user) {
+                    user.watchHistory = [];
+                    localStorage.setItem('movie_app_users', JSON.stringify(movieUser.users));
+                    movieUser.showNotification('Watch history cleared!', 'info');
+                    loadHistory(); // Refresh the page
+                }
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof movieUser !== 'undefined') {
+                movieUser.updateUserUI();
+                loadHistory();
+
+                // Add clear history button
+                const clearBtn = document.createElement('button');
+                clearBtn.className = 'clear-history';
+                clearBtn.innerHTML = '🗑️ Clear All History';
+                clearBtn.onclick = clearAllHistory;
+                document.body.appendChild(clearBtn);
+            } else {
+                console.error('Auth system not loaded');
+            }
+        });
+    </script>
+
+</body>
+
+</html>h

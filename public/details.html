@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Movie Details - Global Explorer</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="browser-config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/recommendations.js"></script>
+  <script src="js/compare.js"></script>
+  <script src="js/analytics.js"></script>
+</head>
+<body>
+
+<nav class="details-nav">
+  <button class="nav-back" onclick="window.location.href='index.html'">← Back to Home</button>
+  <button id="userBtn" class="nav-user">👤 Login</button>
+</nav>
+
+<div id="details" class="details-container">
+  <div class="loading-screen">
+    <div class="loading-spinner-large"></div>
+    <p>Loading movie details...</p>
+  </div>
+</div>
+
+<div id="recommendationsSection" class="recommendations-section" style="display: none;">
+  <div class="section-header">
+    <h2>🍿 You Might Also Like</h2>
+    <div class="section-line"></div>
+  </div>
+  <div id="recommendationsContainer" class="recommendations-grid"></div>
+</div>
+
+<script src="js/details.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof movieUser !== 'undefined') movieUser.updateUserUI();
+});
+</script>
+</body>
+</html>

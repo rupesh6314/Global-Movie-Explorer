@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Favorites - Movie Explorer</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❤️</text></svg>">
+    <script src="browser-config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="details-nav">
+        <button class="nav-back" onclick="window.location.href='index.html'">← Back to Home</button>
+        <button id="userBtn" class="nav-user">👤 Login</button>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="library-container">
+        <div class="library-header">
+            <h1>❤️ My Favorites</h1>
+            <p class="library-subtitle">Movies you love and cherish</p>
+        </div>
+
+        <div id="favoritesContainer" class="library-grid">
+            <div class="loading-screen">
+                <div class="loading-spinner-large"></div>
+                <p>Loading your favorites...</p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .library-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            min-height: 70vh;
+        }
+
+        .library-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .library-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ff6b6b, #ff4757);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .library-subtitle {
+            color: #aaa;
+            font-size: 1rem;
+        }
+
+        .library-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 25px;
+        }
+
+        .library-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .library-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 71, 87, 0.1);
+        }
+
+        .library-card img {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+        }
+
+        .library-card-info {
+            padding: 12px;
+        }
+
+        .library-card-info h3 {
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: white;
+        }
+
+        .library-card-info p {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            border: none;
+            color: #ff4757;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 1;
+        }
+
+        .remove-btn:hover {
+            background: #ff4757;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            grid-column: 1 / -1;
+        }
+
+        .empty-state h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #ff4757;
+        }
+
+        .empty-state p {
+            color: #aaa;
+            margin-bottom: 25px;
+        }
+
+        .empty-state button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #ff6b6b, #ff4757);
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+
+        .empty-state button:hover {
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .library-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 15px;
+            }
+
+            .library-card img {
+                height: 220px;
+            }
+        }
+    </style>
+
+    <script>
+        function loadFavorites() {
+            const container = document.getElementById('favoritesContainer');
+
+            // Check if user is logged in
+            if (!movieUser.isLoggedIn()) {
+                container.innerHTML = `
+                <div class="empty-state">
+                    <h2>🔒 Please Login</h2>
+                    <p>You need to be logged in to view your favorites</p>
+                    <button onclick="movieUser.renderAuthModal()">Login Now</button>
+                </div>
+            `;
+                return;
+            }
+
+            const favorites = movieUser.getFavorites();
+
+            if (favorites.length === 0) {
+                container.innerHTML = `
+                <div class="empty-state">
+                    <h2>❤️ No Favorites Yet</h2>
+                    <p>Start adding movies you love to your favorites!</p>
+                    <button onclick="window.location.href='index.html'">Browse Movies</button>
+                </div>
+            `;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            favorites.forEach(movie => {
+                const card = document.createElement('div');
+                card.className = 'library-card';
+                card.innerHTML = `
+                <button class="remove-btn" onclick="event.stopPropagation(); removeFromFavorites(${movie.id})">✕</button>
+                <img src="https://image.tmdb.org/t/p/w300${movie.poster}" alt="${movie.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'450\' viewBox=\'0 0 300 450\'%3E%3Crect width=\'300\' height=\'450\' fill=\'%23333\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' fill=\'%23666\' font-size=\'20\' dy=\'.3em\'%3E🎬%3C/text%3E%3C/svg%3E'">
+                <div class="library-card-info">
+                    <h3>${movie.title}</h3>
+                    <p>Added: ${new Date(movie.addedAt).toLocaleDateString()}</p>
+                </div>
+            `;
+                card.onclick = () => {
+                    window.location.href = `details.html?movieId=${movie.id}`;
+                };
+                container.appendChild(card);
+            });
+        }
+
+        function removeFromFavorites(movieId) {
+            if (confirm('Remove this movie from your favorites?')) {
+                movieUser.removeFromFavorites(movieId);
+                loadFavorites(); // Refresh the list
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof movieUser !== 'undefined') {
+                movieUser.updateUserUI();
+                loadFavorites();
+            } else {
+                console.error('Auth system not loaded');
+            }
+        });
+    </script>
+
+</body>
+
+</html>f

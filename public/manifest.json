@@ -1,0 +1,10 @@
+{
+    "name": "Global Movie Explorer",
+    "short_name": "MovieExplorer",
+    "description": "Discover and explore movies from around the world",
+    "start_url": "/",
+    "display": "standalone",
+    "theme_color": "#ffd700",
+    "background_color": "#0b0f1a",
+    "icons": []
+}
